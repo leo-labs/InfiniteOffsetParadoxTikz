@@ -1,0 +1,96 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+
+\title{Infinite Offset Paradox with \texttt{tikz}}
+\author{Leonard Kleinhans}
+\date{January 2017}
+\usepackage[a4paper, left=2cm, right=2cm, top=3cm]{geometry}
+
+\usepackage{tikz}
+\usepackage{ifthen}
+\usepackage{float}
+
+\usetikzlibrary{decorations.pathreplacing}
+
+\newcommand{\infiniteoffsetparadox}[3]{
+   \begin{tikzpicture}[darkstyle/.style={circle,draw,fill=gray!40,minimum size=20}]
+% number of rectangles
+\def \count {#1}
+% print fraction for the first \print rectangles 
+\def \print {#2}
+% color overlap for first \overlap rectangles
+\def \overlap {#3}
+% rectangle width
+\def \a {4} 
+% rectangle height
+\def \b {1} 
+% rectangle start offset in grid 
+\def \s {1}
+% offset of nth rectangle
+\def \o {0}
+\pgfmathsetmacro{\c}{\count-1}
+\pgfmathsetmacro{\overlap}{\overlap-1}
+\pgfmathsetmacro{\ocolor}{0}
+% calculate offset for coloring
+\foreach \cy in {0,...,\overlap} {
+    \pgfmathsetmacro{\oocolor}{\ocolor+((2*(\cy+1))^(-1)*\a)}
+    \global\let\ocolor=\oocolor
+}
+\foreach \y in {0,...,\c} {
+    \draw
+        (\s+\o,    \s-\y*\b) rectangle
+        (\s+\a+\o, \s-\b-\y*\b);
+    % calculate new offset
+    \pgfmathsetmacro{\oo}{\o+((2*(\y+1))^(-1)*\a)}    
+    \pgfmathsetmacro{\f}{2*\y+2}
+    % print fraction with curly brace
+    \ifthenelse{\y<\print}{
+    \draw [decorate, line width=.5pt, decoration={brace, mirror}] (\s+\o, \s-\y*\b-1.1*\b) --  (0.99*\s+0.99*\oo, \s-\y*\b-1.1*\b) node [midway, below=3pt]
+    {\footnotesize$\frac{1}{\pgfmathprintnumber\f}$};
+    };{};
+    
+    % add color
+    \ifthenelse{\NOT{\y>\overlap}}{
+        \pgfmathsetmacro{\rectend}{min(\s+\ocolor,\s+\o+\a)}
+        % for overlap
+        \fill [overlapcolor] (\s+\o,    \s-\y*\b) rectangle (\rectend, \s-\b-\y*\b);
+        % for setoff
+        \fill [setoffcolor] (\rectend,    \s-\y*\b) rectangle (\s+\o+\a, \s-\b-\y*\b);
+    };{};
+    % update offset
+    \global\let\o=\oo
+}
+
+\end{tikzpicture}
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+\section{Introduction}
+This document contains a fully customizable function that generates illustrations of the Infinite Offset Paradox. The figures are generated using \texttt{tikz}. The provided command \texttt{infiniteoffsetparadox} takes three arguments, that is first the number of rectangles to draw, the number of labels to generate and the number of rectangles that get colored regarding overlap and offset. The next section provides example outputs.
+
+\section{Examples}
+% define color
+\definecolor{overlapcolor}{HTML}{801A15}
+\definecolor{setoffcolor}{HTML}{537614}
+
+\begin{figure}[H]
+    \centering
+    \infiniteoffsetparadox{3}{2}{2}
+    \caption{Illustration of the Infinite Offset Paradox with parameters $(3,2,2)$}
+\end{figure}
+
+% use different colors for second figure
+\definecolor{overlapcolor}{HTML}{A5CA00}
+\definecolor{setoffcolor}{HTML}{085286}
+
+\begin{figure}[H]
+    \centering
+    \infiniteoffsetparadox{5}{1}{4}
+    \caption{Illustration of the Infinite Offset Paradox with parameters $(5,1,4)$}
+\end{figure}
+\end{document}
